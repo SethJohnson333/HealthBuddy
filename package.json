@@ -1,4 +1,11 @@
 {
+  "dependencies": {
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.67.3"
+  },
   "name": "healthbuddy",
   "version": "1.0.0",
   "description": "��#\u0000 \u0000H\u0000e\u0000a\u0000l\u0000t\u0000h\u0000B\u0000u\u0000d\u0000d\u0000y\u0000\r\u0000 \u0000",
@@ -9,9 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "express": "^4.21.1",
-    "module_name": "^1.0.0",
-    "multer": "^1.4.5-lts.1"
+  "devDependencies": {
+    "nodemon": "^3.1.7"
   }
 }
