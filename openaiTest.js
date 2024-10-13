@@ -4,29 +4,86 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Simulated database for storing patient data
-let patientDataStore = {};  
+let patientDataStore = {};
 
 // Initialize the OpenAI API client with the API key
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Utility function to calculate the follow-up date with randomization (always in the future)
+const drugInteractionDatabase = {
+    "Metformin": {
+        "Prednisone": { severity: "SEVERE", message: "Prednisone can increase blood sugar levels, which can worsen diabetes control when taken with Metformin." },
+        "Ibuprofen": { severity: "MILD", message: "Taking Ibuprofen with Metformin may increase the risk of kidney problems." }
+    },
+    "Lisinopril": {
+        "Ibuprofen": { severity: "MILD", message: "Ibuprofen may reduce the effectiveness of Lisinopril and increase the risk of kidney damage." },
+        "Spironolactone": { severity: "SEVERE", message: "Using Lisinopril with Spironolactone can increase the risk of high potassium levels, leading to heart problems." }
+    },
+};
+
+// Utility function to calculate the follow-up date with randomization (always in the future) and a random time
 const calculateFollowUpDate = (minDays, maxDays) => {
-    const today = new Date(2024, 9, 12); 
+    const today = new Date(2024, 9, 12);
 
     const randomDays = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
 
-    // Calculate the future date by adding the random number of days to today's date
     const followUpDate = new Date(today);
     followUpDate.setDate(today.getDate() + randomDays);
 
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return followUpDate.toLocaleDateString(undefined, options); 
+    const randomHour = Math.floor(Math.random() * (17 - 9 + 1)) + 9;
+    const randomMinute = Math.floor(Math.random() * 60);
+    followUpDate.setHours(randomHour, randomMinute);
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true };
+    return followUpDate.toLocaleString(undefined, options);
+};
+
+// Utility function to extract known medications from a given transcript
+const extractMedications = (transcript) => {
+    const knownMedications = ['Lisinopril', 'Ibuprofen', 'Metformin', 'Prednisone', 'Simvastatin', 'Warfarin', 'Insulin', 'Aspirin'];
+    return knownMedications.filter(med => transcript.includes(med));
+};
+
+const analyzeSeverity = (simplifiedDiagnosis) => {
+    const severeKeywords = ['life-threatening', 'critical', 'emergency', 'urgent'];
+    const mildKeywords = ['manageable', 'mild', 'low risk', 'treatable'];
+
+    let severityScore = 5; 
+
+    severeKeywords.forEach(keyword => {
+        if (simplifiedDiagnosis.includes(keyword)) {
+            severityScore = Math.max(severityScore, 8);
+        }
+    });
+
+    mildKeywords.forEach(keyword => {
+        if (simplifiedDiagnosis.includes(keyword)) {
+            severityScore = Math.min(severityScore, 3);
+        }
+    });
+
+    return severityScore;
+};
+
+// Add the missing detectContradictions function
+const detectContradictions = (currentMedications, patientMedications) => {
+    const contradictions = [];
+
+    currentMedications.forEach(currentMed => {
+        patientMedications.forEach(patientMed => {
+            if (drugInteractionDatabase[patientMed] && drugInteractionDatabase[patientMed][currentMed]) {
+                const interaction = drugInteractionDatabase[patientMed][currentMed];
+                contradictions.push({ severity: interaction.severity, message: interaction.message });
+            }
+        });
+    });
+
+    return contradictions;
 };
 
 // Function to call OpenAI API for testing
-const callOpenAIAPI = async (transcript, task = "simplify", patientId = null) => {
+const callOpenAIAPI = async (transcript, task = "simplify", patientId = null, currentMedications = []) => {
     let messages;
 
     if (task === "simplify") {
@@ -40,40 +97,52 @@ const callOpenAIAPI = async (transcript, task = "simplify", patientId = null) =>
             { role: "user", content: `The patient described the following symptoms: '${transcript}'. Please rewrite this description in a formal, clinical way suitable for sending to a doctor.` }
         ];
 
-        // Store patient symptoms in patientDataStore
         if (patientId) {
-            patientDataStore[patientId] = transcript;
-            console.log(`Stored symptoms for patient ${patientId}: ${transcript}`);
+            patientDataStore[patientId] = { ...patientDataStore[patientId], symptoms: transcript };
         }
     } else if (task === "diagnose") {
-        const previousSymptoms = patientDataStore[patientId];
-        if (!previousSymptoms) {
-            console.log("No previous symptoms found for this patient. Diagnosing based on current symptoms only.");
-            messages = [
-                { role: "system", content: "You are a doctor providing a medical diagnosis in simple language." },
-                { role: "user", content: `The patient described the following symptoms: '${transcript}'. Please provide a detailed diagnosis with sections for: Summarized diagnosis (explain in simple language for a non-medical person), Treatment steps (concise and direct), Appointment schedule (with exact dates), and Prescribed medications with only the drug name and dosage.` }
-            ];
-        } else {
-            // Calculate the follow-up date
-            const followUpDate = calculateFollowUpDate(7, 10); 
+        const patientData = patientDataStore[patientId] || {};
+        const previousMedications = patientData.medications || [];
 
-            // Doctor provides a detailed diagnosis, more explanatory for non-medical patients
-            messages = [
-                { role: "system", content: "You are a doctor providing a medical diagnosis in simple language based on the patient's current symptoms and their previous history." },
-                { role: "user", content: `The patient's previous symptoms were: '${previousSymptoms}'. The current symptoms are: '${transcript}'. Please provide a detailed diagnosis with sections for: Summarized diagnosis (explain in simple language for a non-medical person), Treatment steps (concise and direct), Appointment schedule (with the exact date '${followUpDate}'), and Prescribed medications with only the drug name and dosage.` }
-            ];
+        const contradictions = detectContradictions(currentMedications, previousMedications);
+        let contradictionMessages = '';
+        if (contradictions.length > 0) {
+            contradictionMessages = contradictions.map(c => `**${c.severity} Alert:** ${c.message}`).join('\n');
         }
+
+        messages = [
+            { role: "system", content: "You are a doctor providing a medical diagnosis in simple language based on the patient's current symptoms and their previous history." },
+            { role: "user", content: `The patient's previous symptoms were: '${patientData.symptoms || 'unknown'}'. The current symptoms are: '${transcript}'. Please provide a detailed diagnosis with sections for: Summarized diagnosis, Treatment steps, and Prescribed medications with only the drug name and dosage.` }
+        ];
+
+        if (contradictionMessages) {
+            console.log(`**Contradiction Alerts:**\n${contradictionMessages}`);
+        }
+
+        patientDataStore[patientId] = { ...patientDataStore[patientId], medications: [...previousMedications, ...currentMedications] };
     }
 
     try {
         const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",  
+            model: "gpt-3.5-turbo",
             messages: messages,
-            max_tokens: 500,  
-            temperature: 0.7, 
+            max_tokens: 500,
+            temperature: 0.7,
         });
 
         const resultText = response.choices[0].message.content.trim();
+
+        if (task === "simplify") {
+            const severity = analyzeSeverity(resultText);
+            console.log(`\n\nSeverity Level (1-10): ${severity}`);
+            console.log(`Description: illness is ${severity <= 5 ? 'mild' : 'severe'}`);
+
+            if (severity > 5) {
+                const followUpDate = calculateFollowUpDate(7, 10);
+                console.log(`\nAppointment Schedule: ${followUpDate}`);
+            }
+        }
+
         return resultText;
     } catch (error) {
         console.error("Error calling OpenAI API:", error.response ? error.response.data : error.message);
@@ -83,21 +152,22 @@ const callOpenAIAPI = async (transcript, task = "simplify", patientId = null) =>
 
 // Function to simulate patient flow with sections
 const patientFlow = async (transcript, patientId) => {
-    // Step 1: Patient describes symptoms (store)
+    const currentMedications = extractMedications(transcript);
+
     const sophisticatedDescription = await callOpenAIAPI(transcript, "describe", patientId);
     console.log(`\nSophisticated description for doctor: ${sophisticatedDescription}`);
 
-    // Step 2: Doctor reviews symptoms and provides a detailed diagnosis with sections (no separate simplification step)
-    const diagnosis = await callOpenAIAPI(transcript, "diagnose", patientId);
-    console.log(`\nDoctor's diagnosis: ${diagnosis}`);
+    const diagnosis = await callOpenAIAPI(transcript, "diagnose", patientId, currentMedications);
+    console.log(`\nDoctor's diagnosis:\n${diagnosis}`);
+
+    await callOpenAIAPI(diagnosis, "simplify", patientId, currentMedications);
 };
 
 // Capture input from command line
 const transcript = process.argv[2] || "No input provided!";
-const patientId = process.argv[3] || "123";  
+const patientId = process.argv[3] || "123";
 console.log("\nInput Transcript:", transcript);
 
-// Run the patient flow with sectioning and simplification merged
 patientFlow(transcript, patientId)
     .catch(error => {
         console.error("Error: ", error);
