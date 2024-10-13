@@ -13,7 +13,7 @@ const openai = new OpenAI({
 
 // Utility function to calculate the follow-up date with randomization (always in the future)
 const calculateFollowUpDate = (minDays, maxDays) => {
-    const today = new Date(2024, 9, 12); // Month is 0-based, so 9 is October
+    const today = new Date(2024, 9, 12); 
 
     const randomDays = Math.floor(Math.random() * (maxDays - minDays + 1)) + minDays;
 
@@ -22,7 +22,7 @@ const calculateFollowUpDate = (minDays, maxDays) => {
     followUpDate.setDate(today.getDate() + randomDays);
 
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return followUpDate.toLocaleDateString(undefined, options);  // Return the exact follow-up date
+    return followUpDate.toLocaleDateString(undefined, options); 
 };
 
 // Function to call OpenAI API for testing
@@ -35,7 +35,6 @@ const callOpenAIAPI = async (transcript, task = "simplify", patientId = null) =>
             { role: "user", content: `Please simplify the following medical diagnosis for a patient: '${transcript}'` }
         ];
     } else if (task === "describe") {
-        // Handle describe task correctly
         messages = [
             { role: "system", content: "You are a medical expert who translates patient symptoms into a formal description suitable for doctors." },
             { role: "user", content: `The patient described the following symptoms: '${transcript}'. Please rewrite this description in a formal, clinical way suitable for sending to a doctor.` }
@@ -56,7 +55,7 @@ const callOpenAIAPI = async (transcript, task = "simplify", patientId = null) =>
             ];
         } else {
             // Calculate the follow-up date
-            const followUpDate = calculateFollowUpDate(7, 10);  // Random date between 7 and 10 days
+            const followUpDate = calculateFollowUpDate(7, 10); 
 
             // Doctor provides a detailed diagnosis, more explanatory for non-medical patients
             messages = [
@@ -68,10 +67,10 @@ const callOpenAIAPI = async (transcript, task = "simplify", patientId = null) =>
 
     try {
         const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",  // Switch to GPT-4 if available
+            model: "gpt-3.5-turbo",  
             messages: messages,
-            max_tokens: 500,  // Increased token limit for longer responses
-            temperature: 0.7,  // Control creativity (lower for deterministic response)
+            max_tokens: 500,  
+            temperature: 0.7, 
         });
 
         const resultText = response.choices[0].message.content.trim();
@@ -95,7 +94,7 @@ const patientFlow = async (transcript, patientId) => {
 
 // Capture input from command line
 const transcript = process.argv[2] || "No input provided!";
-const patientId = process.argv[3] || "123";  // Simulate a patient ID
+const patientId = process.argv[3] || "123";  
 console.log("\nInput Transcript:", transcript);
 
 // Run the patient flow with sectioning and simplification merged
