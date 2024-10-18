@@ -8,17 +8,22 @@
 </head>
 <body>
     <div id="audio-container">
-        <p id="transcription"></p>
-    </div>
-
-    <div>
+        <!-- <p id="transcription"></p> -->
+        
+        
         <div id="audio-button-group">
-            <button id="startBtn"><img src="/assets/record_voice.png" alt="Record Button Art">Start</button>
-            <button id="pauseBtn"><img src="/assets/pause_button.png" alt="Pause Button Art">Pause</button>
-            <button id="transcribeBtn"><img src="/assets/send_button.png" alt="Send Button Art">Send</button>
+            <button class="audio-toggle-color" id="startBtn">
+                <img src="/assets/record_voice.png" alt="Record Button Art"> <span>Start</span>
+            </button>
+            <button id="pauseBtn">
+                <img src="/assets/pause_button.png" alt="Pause Button Art"> <span>Pause</span>
+            </button>
+            <button id="transcribeBtn">
+                <img src="/assets/send_button.png" alt="Send Button Art"> <span>Send</span>
+            </button>
         </div>
     </div>
-
+        
     <script src="/scripts/capture-script.js"></script>
 </body>
 </html>

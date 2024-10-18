@@ -114,7 +114,7 @@ button:hover {
 
 
 .container {
-    background-color: white;
+    background-color: #FCFBFC;
     filter: drop-shadow(4px 4px 10px rgba(0, 0, 0, 0.1));
     font-family: "IBM Plex Mono", sans-serif;
     border-radius: 20px;
@@ -152,12 +152,6 @@ p {
 
     flex: 2
 }
-
-hr {
-    border: 1px solid #A9A9A9;
-    width: 100%;
-}
-
 
 .main {
     width: fit-content;
@@ -232,4 +226,9 @@ ol li {
 ol li::marker {
     color: #F17458;
     font-weight: bold;
+}
+
+button.my-button {
+    background-color: #F17458;
+    color: white;
 }

@@ -28,48 +28,34 @@ body {
     width: 475px;
     height: 238px;
     flex-shrink: 0;
+    align-content: center;
     border-radius: 20px;
     background: #F17458;
-    /* text-align: center;
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 600px;
-    height: 20%;
-    background: #F17458; */
 }
 
-h1 {
-    margin-bottom: 20px;
-    color: #4CAF50;
+#transcription {
+    white-space: pre-wrap;
+    text-align: center;
+    color: #878787;
+    background-color: #F17458;
+    font-family: Poppins;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
 }
 
 #audio-button-group {
     display: flex;
-    width: 475px;
-    height: 136px;
-    padding: 20px;
     justify-content: center;
-    align-items: flex-end;
+    width: 475px;
     gap: 20px;
-    flex-shrink: 0;
-
-    border-radius: 0px 0px 20px 20px;
-    background: #FCFBFC;
-    /* margin: auto;
-    margin-top: 20px;
-    display: flex;
-    width: 90%;
-    max-width: 600px;
     padding: 20px;
     justify-content: center;
     align-items: center;
-    gap: 10px;
     flex-shrink: 0;
-    border-radius: 0px 0px 20px 20px;
+    border-radius: 20px;
     background: #FCFBFC;
-    background-color: #ffffff;
 
     color: #878787;
     font-family: Poppins;
@@ -79,35 +65,35 @@ h1 {
     line-height: normal; */
 }
 
+/* General Button Styles */
 button {
     display: flex;
-    padding: 20px;
-    justify-content: center;
     align-items: center;
-    gap: 10px;
-    
-    border-radius: 20px;
-    border: 1px solid #F17458;
-    background: #FCFBFC;
-
-    /* display: flex;
-    padding: 20px;
     justify-content: center;
-    align-items: center;
-    gap: 10px;
-    border-radius: 20px;
-    border: 1px solid #F17458;
-    background: #FCFBFC;
+    padding: 10px 20px;
     font-size: 16px;
-    width: 131px;
-    height: 64; */
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
+button img {
+    margin-right: 10px;
+}
+
+button span {
+    background-color: transparent; /* Ensure there's no background behind the text */
+}
+
+/* Start Button: Default state (orange) */
+#startBtn {
+    background-color: #F17458;
+    color: white;
+}
+
+/* Disabled Button State */
 button:disabled {
-    background-color: #F17458;
+    background-color: #ddd;
     cursor: not-allowed;
-}
-
-button:hover:not(:disabled) {
-    background-color: #F17458;
 }

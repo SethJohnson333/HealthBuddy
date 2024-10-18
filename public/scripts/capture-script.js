@@ -5,7 +5,9 @@ let stream = null;
 window.onload = () => {
     // Get buttons and display elements
     const startBtn = document.getElementById('startBtn');
+    const startBtnText = startBtn.querySelector('span');
     const pauseBtn = document.getElementById('pauseBtn');
+    const pauseBtnText = pauseBtn.querySelector('span');
     const transcribeBtn = document.getElementById('transcribeBtn');
     const transcriptionDisplay = document.getElementById('transcription');
 
@@ -13,9 +15,9 @@ window.onload = () => {
     pauseBtn.disabled = true;
     transcribeBtn.disabled = true;
 
-    // Start/Stop recording
+    // Start/Stop recording and toggle color
     startBtn.addEventListener('click', async () => {
-        if (startBtn.textContent === 'Start') {
+        if (startBtnText.textContent === 'Start') {
             // Start recording
             stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
@@ -25,13 +27,15 @@ window.onload = () => {
             };
 
             mediaRecorder.start();
-            startBtn.textContent = 'Stop'; // Change Start button to Stop
+            startBtnText.textContent = 'Stop'; // Change button text to Stop
+            startBtn.classList.add('recording'); // Add 'recording' class to toggle color
             pauseBtn.disabled = false; // Enable Pause button
             transcribeBtn.disabled = true; // Disable Transcribe button until Stop is pressed
-        } else if (startBtn.textContent === 'Stop') {
+        } else if (startBtnText.textContent === 'Stop') {
             // Stop recording
             mediaRecorder.stop();
-            startBtn.textContent = 'Start'; // Change Stop button back to Start
+            startBtnText.textContent = 'Start'; // Change button text back to Start
+            startBtn.classList.remove('recording'); // Remove 'recording' class
             pauseBtn.disabled = true; // Disable Pause button after stopping
             transcribeBtn.disabled = false; // Enable Transcribe button
         }
@@ -41,10 +45,10 @@ window.onload = () => {
     pauseBtn.addEventListener('click', () => {
         if (mediaRecorder.state === 'recording') {
             mediaRecorder.pause();
-            pauseBtn.textContent = 'Resume'; // Change Pause button to Resume
+            pauseBtnText.textContent = 'Resume'; // Change Pause button text to Resume
         } else if (mediaRecorder.state === 'paused') {
             mediaRecorder.resume();
-            pauseBtn.textContent = 'Pause'; // Change Resume button back to Pause
+            pauseBtnText.textContent = 'Pause'; // Change Resume button text back to Pause
         }
     });
 

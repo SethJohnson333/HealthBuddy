@@ -9,7 +9,6 @@ require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({extendes: false}));
 
 app.set('view engine', 'ejs');
 app.use(express.static("public"));
@@ -71,6 +70,7 @@ async function transcribeAudioWithWhisper(audioPath) {
 
     try {
         const response = await axios.post(url, formData, { headers });
+        console.log(response.data.text);
         return response.data.text;
     } catch (error) {
         console.error('Error calling Whisper API:', error.response ? error.response.data : error.message);
